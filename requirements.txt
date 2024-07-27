@@ -1,2 +1,7 @@
 fastapi[all]
 uvicorn==0.30.3
+diffusers
+torch
+accelerate
+torchvision
+python-dotenv
