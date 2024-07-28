@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Response
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
+import torch
 import zipfile
 
 from src.models.diffusers import diffusers_instance
@@ -14,15 +15,19 @@ class ImageService:
         zip_buffer = BytesIO()
         try:
             source_image = Image.open(BytesIO(image)).convert("RGB")
-            source_image.thumbnail((768, 768))
+            source_image = ImageOps.exif_transpose(source_image)
+            source_image = source_image.convert("RGB")
+            source_image.thumbnail((512, 512))
             pipe = diffusers_instance.get_pipeline()
-            generator = diffusers_instance.get_generator()
-            generated_images = pipe(prompt=prompt,
-                                    image=source_image,
-                                    strength=0.5,
-                                    guidance_scale=10,
-                                    num_images_per_prompt=n,
-                                    generator=generator).images
+            with torch.no_grad():
+              generated_images = pipe(prompt=prompt,
+                                      image=source_image,
+                                      guidance_scale=7.66,
+                                      image_guidance_scale=1.87,
+                                      num_images_per_prompt=n,
+                                      num_inference_steps=30).images
+            
+            # Create a zip file by iterating through generated images
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
                 for idx, img in enumerate(generated_images):
                     img_byte_arr = BytesIO()
@@ -41,7 +46,7 @@ class ImageService:
                 media_type="application/zip")
         except BaseException:
             raise HTTPException(
-                detail='There was an error processing the data',
+                detail='There was an error creating the zip file',
                 status_code=400)
         finally:
             zip_buffer.close()

@@ -1,6 +1,5 @@
 import torch
-import os
-from diffusers import StableDiffusionImg2ImgPipeline, LMSDiscreteScheduler
+from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
 
 from dotenv import load_dotenv
@@ -13,22 +12,17 @@ class DiffusersModel:
         # token = os.getenv("HUGGING_FACE_TOKEN") # May use this later
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.generator = torch.Generator(device=self.device).manual_seed(1024)
-        self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-            "nitrosocke/Ghibli-Diffusion",
+        self.pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(
+            "timbrooks/instruct-pix2pix", 
             torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-        ).to(
+            safety_checker=None).to(
             self.device)
 
-        self.lms = LMSDiscreteScheduler.from_config(self.pipe.scheduler.config)
-        self.pipe.scheduler = self.lms
+        self.pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(self.pipe.scheduler.config)
         self.pipe.enable_attention_slicing()
 
     def get_pipeline(self):
         return self.pipe
-
-    def get_generator(self):
-        return self.generator
 
 
 diffusers_instance = DiffusersModel()
