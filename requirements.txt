@@ -1,6 +1,7 @@
 fastapi[all]
 uvicorn==0.30.3
 diffusers
+transformers
 torch
 accelerate
 torchvision
