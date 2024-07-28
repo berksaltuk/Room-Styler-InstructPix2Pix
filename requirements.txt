@@ -4,4 +4,6 @@ diffusers
 torch
 accelerate
 torchvision
+pillow
+scipy
 python-dotenv

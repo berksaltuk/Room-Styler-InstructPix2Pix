@@ -1,11 +1,12 @@
-from fastapi import UploadFile
-from src.schemas.image import StyleTransferResponse
+from fastapi import UploadFile, Response
 from src.services.image import ImageService
 
 
 class ImageController:
     @staticmethod
     async def transfer_style(prompt: str,
-                             image: UploadFile) -> StyleTransferResponse:
-        response = await ImageService.transfer_style(prompt, image)
-        return StyleTransferResponse(success=True, message=response)
+                             n: int,
+                             image: UploadFile) -> Response:
+        image_bytes = await image.read()
+        response = await ImageService.transfer_style(prompt, n, image=image_bytes)
+        return response
