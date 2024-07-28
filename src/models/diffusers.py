@@ -9,6 +9,11 @@ load_dotenv()
 
 class DiffusersModel:
     def __init__(self):
+        """
+        Initialize the DiffusersModel class.
+        This sets up the StableDiffusionInstructPix2PixPipeline with appropriate settings.
+        """
+      
         # token = os.getenv("HUGGING_FACE_TOKEN") # May use this later
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,6 +27,12 @@ class DiffusersModel:
         self.pipe.enable_attention_slicing()
 
     def get_pipeline(self):
+        """
+        Get the configured StableDiffusionInstructPix2PixPipeline.
+
+        Returns:
+            pipe (StableDiffusionInstructPix2PixPipeline): The configured pipeline instance.
+        """
         return self.pipe
 
 
