@@ -6,7 +6,7 @@ import zipfile
 import gc
 
 from src.models.diffusers import diffusers_instance
-
+from src.models.room_classifier import room_classifier_instance
 
 class ImageService:
     @staticmethod
@@ -22,29 +22,39 @@ class ImageService:
         Returns:
             BytesIO: A zip_buffer containing images
         """
+        source_image = Image.open(BytesIO(image)).convert("RGB")
+        source_image = ImageOps.exif_transpose(source_image)
+        
+        source_image.thumbnail((512, 512))
+
+        img_byte_arr = BytesIO()
+        source_image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        results = room_classifier_instance.classify_image(img_byte_arr.getvalue())
+
+        most_likely = max(results, key=lambda x: x['score'])
+
+        if most_likely['score'] < 0.6:
+          raise HTTPException(
+                detail='The source image is not a room picture.',
+                status_code=400
+            )    
+        pipe = diffusers_instance.get_pipeline()
+
+        with torch.no_grad():
+            generated_images = pipe(
+                prompt=prompt,
+                image=source_image,
+                guidance_scale=7.66,
+                image_guidance_scale=1.87,
+                num_images_per_prompt=n,
+                num_inference_steps=50
+            ).images
+
+        gc.collect()
+        torch.cuda.empty_cache()
         zip_buffer = BytesIO()
         try:
-           
-            source_image = Image.open(BytesIO(image)).convert("RGB")
-            source_image = ImageOps.exif_transpose(source_image)
-           
-            source_image.thumbnail((512, 512))
-
-            pipe = diffusers_instance.get_pipeline()
-
-            with torch.no_grad():
-                generated_images = pipe(
-                    prompt=prompt,
-                    image=source_image,
-                    guidance_scale=7.66,
-                    image_guidance_scale=1.87,
-                    num_images_per_prompt=n,
-                    num_inference_steps=50
-                ).images
-
-            gc.collect()
-            torch.cuda.empty_cache()
-
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
                 img_byte_arr = BytesIO()
                 source_image.save(img_byte_arr, format='JPEG')
@@ -68,11 +78,6 @@ class ImageService:
             raise HTTPException(
                 detail=f'Error processing the images: {e}',
                 status_code=400
-            )
-        except torch.error as e:
-            raise HTTPException(
-                detail=f'Torch operation error: {e}',
-                status_code=500
             )
         except zipfile.BadZipFile as e:
             # Handle errors related to zip file creation
