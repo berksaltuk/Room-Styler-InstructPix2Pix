@@ -22,25 +22,34 @@ class ImageService:
         Returns:
             BytesIO: A zip_buffer containing images
         """
+
+        # open the source image and remove the rotation if exists
         source_image = Image.open(BytesIO(image)).convert("RGB")
         source_image = ImageOps.exif_transpose(source_image)
         
         source_image.thumbnail((512, 512))
 
+        # classify the image using pre-trained room image classifier
         img_byte_arr = BytesIO()
         source_image.save(img_byte_arr, format='JPEG')
         img_byte_arr.seek(0)
         results = room_classifier_instance.classify_image(img_byte_arr.getvalue())
 
+        # get the score of most likely room class, if not a room image, throw error
+        # here we are ignoring non-room images to make this service room-specific 
         most_likely = max(results, key=lambda x: x['score'])
 
         if most_likely['score'] < 0.6:
           raise HTTPException(
                 detail='The source image is not a room picture.',
                 status_code=400
-            )    
+            )
+
+        # if everything goes alright get the diffusion pipeline    
         pipe = diffusers_instance.get_pipeline()
 
+        # text & image guidance scales are decided as a result of many trials
+        # number of inference steps can be reduced to make inference faster, but the quality decreases 
         with torch.no_grad():
             generated_images = pipe(
                 prompt=prompt,
@@ -51,8 +60,11 @@ class ImageService:
                 num_inference_steps=50
             ).images
 
+        # run garbage collector and empty cache for memory optimization
         gc.collect()
         torch.cuda.empty_cache()
+
+        # create the zip file including source and generated images
         zip_buffer = BytesIO()
         try:
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:

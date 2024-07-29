@@ -34,9 +34,11 @@ async def transfer_style(
             detail=e.errors()
           )
     
+    # get the zip file response
     zip_buffer = await ImageController.transfer_style(prompt, n, image=source_image)
     response = ZipFileResponse(content=zip_buffer, filename="generated_images.zip")
 
+    # close the zip buffer
     zip_buffer.close()
 
     return response

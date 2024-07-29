@@ -26,6 +26,7 @@ class ZipFileResponse(Response):
     Attributes:
         media_type (str): Always set to "application/zip".
     """
+    # configure the zip file response
     media_type = "application/zip"
 
     def __init__(self, content: BytesIO, filename: str, status_code: int = 200, **kwargs):

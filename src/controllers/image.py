@@ -20,7 +20,7 @@ class ImageController:
         Returns:
             Response: The response from the ImageService after applying the style transfer.
         """
-
+        # to make this endpoint efficient, limit n to be 5 at most
         if not (1 <= n <= 5):
           raise HTTPException(
               status_code=422,
@@ -30,6 +30,7 @@ class ImageController:
         image_bytes = await image.read()
         image_buffer = BytesIO(image_bytes)
 
+        # check if input is an image
         if not is_image(image_buffer):
           raise HTTPException(
               status_code=422,

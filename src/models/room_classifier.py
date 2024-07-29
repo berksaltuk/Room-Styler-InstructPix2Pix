@@ -11,6 +11,8 @@ class RoomImageClassifier:
         Args:
             model_name (str): The name of the model to use for classification.
         """
+        # I trained this classifier model for room type classification
+        # This model has classes bedroom, living room, kitchen and bathroom
         self.pipe = pipeline("image-classification", model=model_name)
 
     def get_pipeline(self):
