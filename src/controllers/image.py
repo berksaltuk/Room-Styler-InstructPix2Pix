@@ -1,12 +1,14 @@
-from fastapi import UploadFile, Response
-from src.services.image import ImageService
+from fastapi import UploadFile, HTTPException
+from io import BytesIO
 
+from src.services.image import ImageService
+from src.utils.image import is_image
 
 class ImageController:
     @staticmethod
     async def transfer_style(prompt: str,
                              n: int,
-                             image: UploadFile) -> Response:
+                             image: UploadFile) -> BytesIO:
         """
         Static method to handle the transfer style request.
 
@@ -19,7 +21,20 @@ class ImageController:
             Response: The response from the ImageService after applying the style transfer.
         """
 
-        # Read the image bytes and call the image service
+        if not (1 <= n <= 5):
+          raise HTTPException(
+              status_code=422,
+              detail="The number of variants must be between 1 and 5"
+          )
+        
         image_bytes = await image.read()
-        response = await ImageService.transfer_style(prompt, n, image=image_bytes)
-        return response
+        image_buffer = BytesIO(image_bytes)
+
+        if not is_image(image_buffer):
+          raise HTTPException(
+              status_code=422,
+              detail="The uploaded file is not a valid image."
+          )
+    
+        zip_buffer = await ImageService.transfer_style(prompt, n, image=image_bytes)
+        return zip_buffer

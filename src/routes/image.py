@@ -1,12 +1,15 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from src.controllers.image import ImageController
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from pydantic import ValidationError
 from typing import Annotated
+
+from src.controllers.image import ImageController
+from src.schemas.image import StyleTransferRequest, ZipFileResponse
 
 router = APIRouter()
 
-
 @router.post("/images/room-styler",
-             description="Takes prompt and room image to apply style to given image")
+             description="Takes prompt and room image to apply style to given image",
+             response_class=ZipFileResponse)
 async def transfer_style(
         prompt: Annotated[str, Form(..., description="Style prompt of your room", example="turn it into a Japanese style living room")],
         n: Annotated[int, Form(..., description="Number of variants you want to create")],
@@ -22,5 +25,18 @@ async def transfer_style(
     Returns:
         Response: The response from the ImageController after applying the style transfer.
     """
-    response = await ImageController.transfer_style(prompt, n, image=source_image)
+    try:
+        # Validate the form data using the Pydantic model
+        _ = StyleTransferRequest(prompt=prompt, number_of_variants=n)
+    except ValidationError as e:
+        return HTTPException(
+            status_code=422,
+            detail=e.errors()
+          )
+    
+    zip_buffer = await ImageController.transfer_style(prompt, n, image=source_image)
+    response = ZipFileResponse(content=zip_buffer, filename="generated_images.zip")
+
+    zip_buffer.close()
+
     return response

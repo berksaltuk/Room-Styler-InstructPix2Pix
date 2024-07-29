@@ -13,8 +13,6 @@ class DiffusersModel:
         Initialize the DiffusersModel class.
         This sets up the StableDiffusionInstructPix2PixPipeline with appropriate settings.
         """
-      
-        # token = os.getenv("HUGGING_FACE_TOKEN") # May use this later
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(
