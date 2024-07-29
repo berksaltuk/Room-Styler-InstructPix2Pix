@@ -14,13 +14,23 @@ class ImageService:
         """
         Applies style transfer to the given image based on the prompt and generates a zip file with the resulting images.
 
+        The process involves:
+        - Opening and processing the source image.
+        - Classifying the image using a pre-trained room classifier to ensure it is a room image.
+        - Applying the style transfer using a diffusion model.
+        - Generating multiple variants of the styled image.
+        - Compressing the source and generated images into a zip file.
+
         Args:
             prompt (str): The style prompt for the style transfer.
             n (int): The number of style variants to generate.
             image (bytes): The image file in bytes to which the style will be applied.
 
         Returns:
-            BytesIO: A zip_buffer containing images
+            BytesIO: A zip_buffer containing the original and generated images.
+
+        Raises:
+            HTTPException: If the source image is not classified as a room or if there are errors during image processing or zip file creation.
         """
 
         # open the source image and remove the rotation if exists
