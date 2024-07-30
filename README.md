@@ -1,2 +1,17 @@
 # HubX ML Engineer Recruitment Case
-FastAPI Web Project for Styling Living Rooms using InstructPix2Pix
+FastAPI Web Project for Styling Living Rooms using InstructPix2Pix.
+
+Each library used in the project and its versions are specified in the requirements.txt file. I provided a Docker file that uses a Python 3.11 image and uses this requirements file along with libmagic. To build the project, you can run the following command:
+
+docker build -t hubx-case .    
+
+
+Normally, the Docker file is written to run the project on port 8000; however, you can specify another port (in the example, port 8080) by running the Docker container as follows:
+
+docker run -p 8080:8000 hubx-case 
+
+
+If you run the container locally, you can find the service's endpoint here. I recommend you run the project on a machine with a GPU to make use of CUDA, as the inference time will be much shorter. Moreover, as I mentioned earlier, at start-up, the service will load the classifier and diffusion models; as the tensors are a few GBs, it may take a while. However, once the pipeline components are downloaded, the app will be up and running quickly. 
+
+One final advice would be to give the prompts as “turn … into …” as the diffusion model was trained for such prompts.
+
