@@ -1,6 +1,7 @@
 from transformers import pipeline
 from io import BytesIO
 from PIL import Image
+import torch
 
 class RoomImageClassifier:
     def __init__(self, model_name="berksaltuk/room-classifier"):
@@ -11,10 +12,17 @@ class RoomImageClassifier:
         Args:
             model_name (str): The name of the model to use for classification.
         """
+
+        # set the device, if cuda available the inference is way faster
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # I trained this classifier model for room type classification
         # This model has classes bedroom, living room, kitchen and bathroom
-        self.pipe = pipeline("image-classification", model=model_name)
-
+        self.pipe = pipeline(
+            "image-classification",
+            model=model_name,
+            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+            device=self.device
+            )
     def get_pipeline(self):
         """
         Get the configured StableDiffusionInstructPix2PixPipeline.
