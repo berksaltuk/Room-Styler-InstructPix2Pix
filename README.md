@@ -1,4 +1,4 @@
-# HubX ML Engineer Recruitment Case
+# Room Styler - Web API
 FastAPI Web Project for Styling Living Rooms using InstructPix2Pix.
 
 Each library used in the project is specified in the requirements.txt file. I provided a Docker file that uses a Python 3.9 image and uses this requirements file along with libmagic. To build the project, you can run the following command:
